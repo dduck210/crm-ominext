@@ -1,3 +1,4 @@
+// src/App.js
 import { Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Home from "./pages/Home";
@@ -10,15 +11,17 @@ import UnauthRoute from "./components/hooks/UnauthRoute";
 import AdminRoute from "./components/hooks/AdminRoute";
 import Loading from "./components/Loading/Loading";
 import AdminPage from "./pages/AdminPage";
-import Profile from "./pages/Profile"; // 👉 import thêm Profile
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 
 function App() {
   return (
     <Loading>
-      <div className="min-h-screen flex flex-col bg-gray-100">
+      <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-950 transition-colors">
         <Header />
         <main className="flex-1 pt-16 pb-14">
           <Routes>
+            {/* Home */}
             <Route
               path="/"
               element={
@@ -27,6 +30,8 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* Auth */}
             <Route
               path="/login"
               element={
@@ -43,6 +48,8 @@ function App() {
                 </UnauthRoute>
               }
             />
+
+            {/* Admin */}
             <Route
               path="/admin"
               element={
@@ -51,11 +58,23 @@ function App() {
                 </AdminRoute>
               }
             />
+
+            {/* Profile */}
             <Route
               path="/profile"
               element={
                 <ProtectedRoute>
-                  <Profile /> {/* 👉 thêm route Profile */}
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Settings */}
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />
