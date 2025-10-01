@@ -17,14 +17,14 @@ const Login = () => {
   const validate = () => {
     const errs = {};
     const uname = username.trim();
-    if (!uname) errs.username = "아이디를 입력해주세요.";
+    if (!uname) errs.username = "Please enter your username.";
     else if (!/^[a-zA-Z0-9_]{3,20}$/.test(uname))
       errs.username =
-        "아이디는 3~20자 영문, 숫자, 밑줄(_)만 입력할 수 있습니다.";
+        "Username must be 3–20 characters and contain only letters, numbers, or underscores (_).";
 
-    if (!password) errs.password = "비밀번호를 입력해주세요.";
+    if (!password) errs.password = "Please enter your password.";
     else if (password.length < 4)
-      errs.password = "비밀번호는 4자 이상이어야 합니다.";
+      errs.password = "Password must be at least 4 characters long.";
 
     return errs;
   };
@@ -55,28 +55,35 @@ const Login = () => {
     try {
       const user = await getUserByUsername(username.trim());
       if (!user) {
-        setErrors({ username: "존재하지 않는 아이디입니다." });
+        setErrors({ username: "Username does not exist." });
         usernameRef.current?.focus();
         setIsSubmitting(false);
         return;
       }
       if (user.password !== password) {
-        setErrors({ password: "아이디 또는 비밀번호가 잘못되었습니다." });
+        setErrors({ password: "Incorrect username or password." });
         passwordRef.current?.focus();
         setIsSubmitting(false);
         return;
       }
 
-      // 🔑 chỉ lưu id + username
-      const minimalUser = { id: user.id, username: user.username };
-      localStorage.setItem("token", minimalUser.id);
-      localStorage.setItem("user", JSON.stringify(minimalUser));
+      // 🔑 Lưu cả userId và user tối giản
+      localStorage.setItem("userId", user.id);
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: user.id,
+          username: user.username,
+          role: user.role,
+        })
+      );
+      localStorage.setItem("token", user.id); // giả token đơn giản bằng id
 
-      toast.success("로그인 성공!");
+      toast.success("Login successful!");
       setIsSubmitting(false);
       navigate("/");
     } catch (err) {
-      toast.error("알 수 없는 오류가 발생했습니다. 다시 시도해주세요!");
+      toast.error("An unknown error occurred. Please try again!");
       setIsSubmitting(false);
     }
   };
@@ -104,7 +111,7 @@ const Login = () => {
         onSubmit={handleLogin}
       >
         <h2 className="text-4xl text-center font-extrabold mb-8 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          로그인
+          Login
         </h2>
 
         {(errors.username || errors.password) && (
@@ -118,8 +125,12 @@ const Login = () => {
             <i className="fas fa-user" />
           </span>
           <input
-            className={`w-full pl-10 pr-4 py-3 border ${errors.username ? "border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white/70 dark:bg-gray-800/70 text-gray-900 dark:text-gray-100`}
-            placeholder="아이디"
+            className={`w-full pl-10 pr-4 py-3 border ${
+              errors.username
+                ? "border-red-500"
+                : "border-gray-300 dark:border-gray-600"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white/70 dark:bg-gray-800/70 text-gray-900 dark:text-gray-100`}
+            placeholder="Username"
             value={username}
             onChange={(e) => handleInput("username", e.target.value)}
             autoComplete="username"
@@ -133,8 +144,12 @@ const Login = () => {
           </span>
           <input
             type="password"
-            className={`w-full pl-10 pr-4 py-3 border ${errors.password ? "border-red-500" : "border-gray-300 dark:border-gray-600"} rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white/70 dark:bg-gray-800/70 text-gray-900 dark:text-gray-100`}
-            placeholder="비밀번호"
+            className={`w-full pl-10 pr-4 py-3 border ${
+              errors.password
+                ? "border-red-500"
+                : "border-gray-300 dark:border-gray-600"
+            } rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white/70 dark:bg-gray-800/70 text-gray-900 dark:text-gray-100`}
+            placeholder="Password"
             value={password}
             onChange={(e) => handleInput("password", e.target.value)}
             autoComplete="current-password"
@@ -150,17 +165,17 @@ const Login = () => {
           {isSubmitting ? (
             <span className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
           ) : (
-            "로그인"
+            "Login"
           )}
         </button>
 
         <div className="mt-6 text-center text-sm text-gray-700 dark:text-gray-200">
-          계정이 없으신가요?{" "}
+          Don’t have an account?{" "}
           <Link
             to="/register"
             className="text-blue-600 dark:text-blue-300 underline hover:text-indigo-600 transition font-semibold"
           >
-            회원가입
+            Register
           </Link>
         </div>
       </form>

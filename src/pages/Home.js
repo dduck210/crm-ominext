@@ -43,6 +43,7 @@ const Home = () => {
   const [page, setPage] = useState(1);
   const itemsPerPage = 8;
   const [dragActive, setDragActive] = useState(false);
+  const [changingPriorityId, setChangingPriorityId] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -761,11 +762,25 @@ const Home = () => {
                                       ? "text-yellow-400"
                                       : "text-gray-400 dark:text-gray-600"
                                   }`}
-                                  title={`${todo.priority ? "Remove priority" : "Set as priority"}`}
-                                  onClick={() => handleTogglePriority(todo)}
-                                  disabled={changingStatusId === todo.id}
+                                  title={
+                                    todo.priority
+                                      ? "Remove priority"
+                                      : "Set as priority"
+                                  }
+                                  onClick={() => {
+                                    if (changingPriorityId === todo.id) return;
+                                    setChangingPriorityId(todo.id);
+                                    handleTogglePriority(todo).finally(() =>
+                                      setChangingPriorityId(null)
+                                    );
+                                  }}
+                                  disabled={changingPriorityId === todo.id}
                                 >
-                                  {todo.priority ? "★" : "☆"}
+                                  {changingPriorityId === todo.id
+                                    ? "…"
+                                    : todo.priority
+                                      ? "★"
+                                      : "☆"}
                                 </button>
                               </td>
                               <td className="px-4 py-3 border-b text-center align-middle">

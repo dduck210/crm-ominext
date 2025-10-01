@@ -10,6 +10,7 @@ import UnauthRoute from "./components/hooks/UnauthRoute";
 import AdminRoute from "./components/hooks/AdminRoute";
 import Loading from "./components/Loading/Loading";
 import AdminPage from "./pages/AdminPage";
+import Profile from "./pages/Profile"; // 👉 import thêm Profile
 
 function App() {
   return (
@@ -48,6 +49,14 @@ function App() {
                 <AdminRoute>
                   <AdminPage />
                 </AdminRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile /> {/* 👉 thêm route Profile */}
+                </ProtectedRoute>
               }
             />
           </Routes>
