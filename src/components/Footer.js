@@ -14,7 +14,7 @@ const Footer = () => {
         </span>
 
         <span className="text-xs bg-white/30 dark:bg-gray-700/50 rounded px-2 py-1 transition">
-          © 2025 TodoApp™. All rights reserved.
+          © 2025 Internal CRM System™. All rights reserved.
         </span>
       </div>
     </footer>

@@ -11,6 +11,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useTranslation } from "react-i18next";
+import AddIcon from "@mui/icons-material/Add";
 
 const API_URL = "https://todo-backend-6c6i.onrender.com/todos";
 const USERS_API = "https://todo-backend-6c6i.onrender.com/users";
@@ -41,9 +42,11 @@ const Home = () => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [changingStatusId, setChangingStatusId] = useState(null);
   const [page, setPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 20;
   const [dragActive, setDragActive] = useState(false);
   const [changingPriorityId, setChangingPriorityId] = useState(null);
+  // const [showForm, setShowForm] = useState(false);
+  const [showFormId, setShowFormId] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -856,29 +859,75 @@ const Home = () => {
                                       </button>
                                     </>
                                   ) : (
-                                    <>
-                                      <VisibilityIcon
-                                        className="w-5 h-5 text-blue-600 dark:text-blue-300 cursor-pointer hover:text-blue-400"
-                                        title="View details"
+                                    <div className="flex items-center gap-2">
+                                      <button
                                         onClick={() => {
                                           setSelectedTask(todo);
                                           setShowDetail(true);
                                         }}
-                                      />
-                                      <EditIcon
-                                        className="w-5 h-5 text-yellow-500 cursor-pointer hover:text-yellow-600"
-                                        title="Edit"
+                                        className="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 transition"
+                                        title="View details"
+                                      >
+                                        <VisibilityIcon className="w-5 h-5 text-blue-500" />
+                                      </button>
+
+                                      <button
                                         onClick={() => {
                                           setEditingId(todo.id);
                                           setEditText(todo.todo);
                                         }}
-                                      />
-                                      <DeleteIcon
-                                        className="w-5 h-5 text-red-500 cursor-pointer hover:text-red-600"
-                                        title="Delete"
+                                        className="p-2 rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-900 transition"
+                                        title="Edit"
+                                      >
+                                        <EditIcon className="w-5 h-5 text-yellow-500" />
+                                      </button>
+
+                                      <button
                                         onClick={() => handleDelete(todo.id)}
-                                      />
-                                    </>
+                                        className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900 transition"
+                                        title="Delete"
+                                      >
+                                        <DeleteIcon className="w-5 h-5 text-red-500" />
+                                      </button>
+
+                                      {isAdmin && (
+                                        <>
+                                          <button
+                                            onClick={() =>
+                                              setShowFormId(
+                                                showFormId === todo.id
+                                                  ? null
+                                                  : todo.id
+                                              )
+                                            }
+                                            className="p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-900 transition"
+                                            title="Add task"
+                                          >
+                                            <AddIcon className="w-5 h-5 text-green-500" />
+                                          </button>
+
+                                          {/* Chỉ hiện form ở todo được chọn */}
+                                          {showFormId === todo.id && (
+                                            <div className="w-full mt-2">
+                                              <TodoForm
+                                                onAdd={handleAdd}
+                                                users={users}
+                                                isAdmin={isAdmin}
+                                                currentUserId={userId}
+                                              />
+                                              <button
+                                                onClick={() =>
+                                                  setShowFormId(null)
+                                                }
+                                                className="mt-2 text-sm text-gray-500 hover:text-red-500"
+                                              >
+                                                ✖ Close
+                                              </button>
+                                            </div>
+                                          )}
+                                        </>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
                               </td>
