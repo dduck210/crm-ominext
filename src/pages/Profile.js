@@ -7,6 +7,10 @@ const USERS_API = "https://todo-backend-6c6i.onrender.com/users";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,6 +33,62 @@ const Profile = () => {
   const handleLogout = () => {
     localStorage.clear();
     navigate("/login");
+  };
+
+  // Validate từng field
+  const validateField = (name, value) => {
+    let error = "";
+
+    if (name === "oldPassword") {
+      if (!value) error = "Old password is required";
+      else if (user && value !== user.password)
+        error = "Old password is incorrect";
+    }
+
+    if (name === "newPassword") {
+      if (!value) error = "New password is required";
+      else if (value.length < 6)
+        error = "Password must be at least 6 characters";
+    }
+
+    if (name === "confirmPassword") {
+      if (!value) error = "Please confirm new password";
+      else if (value !== newPassword) error = "Passwords do not match";
+    }
+
+    return error;
+  };
+
+  // Validate tất cả trước khi submit
+  const validateAll = () => {
+    const newErrors = {
+      oldPassword: validateField("oldPassword", oldPassword),
+      newPassword: validateField("newPassword", newPassword),
+      confirmPassword: validateField("confirmPassword", confirmPassword),
+    };
+    setErrors(newErrors);
+    return newErrors;
+  };
+
+  const handleUpdatePassword = async () => {
+    const newErrors = validateAll();
+    if (Object.values(newErrors).some((err) => err)) {
+      return; // có lỗi thì dừng
+    }
+
+    try {
+      await axios.patch(`${USERS_API}/${user.id}`, {
+        password: newPassword,
+      });
+      alert("✅ Password updated successfully!");
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setErrors({});
+    } catch (err) {
+      console.error("❌ Error updating password:", err);
+      alert("Failed to update password");
+    }
   };
 
   if (!user) {
@@ -71,12 +131,13 @@ const Profile = () => {
           </span>
         </div>
 
-        {/* Right - Detailed Info (takes 2 columns) */}
+        {/* Right - Detailed Info + Change Password */}
         <div className="flex flex-col justify-between col-span-2">
           <div>
             <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
               Detailed Information
             </h3>
+            {/* Info */}
             <div className="space-y-3 text-gray-700 dark:text-gray-300">
               <div className="flex justify-between border-b pb-2">
                 <span className="font-medium">Username</span>
@@ -94,6 +155,100 @@ const Profile = () => {
                 <span className="font-medium">Created At</span>
                 <span>{user.createdAt || "unknown"}</span>
               </div>
+            </div>
+
+            {/* Change Password Section */}
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mt-8 mb-4">
+              Change Password
+            </h3>
+            <div className="space-y-4">
+              {/* Old Password */}
+              <div>
+                <input
+                  type="password"
+                  placeholder="Old Password"
+                  value={oldPassword}
+                  onChange={(e) => {
+                    setOldPassword(e.target.value);
+                    setErrors((prev) => ({
+                      ...prev,
+                      oldPassword: validateField("oldPassword", e.target.value),
+                    }));
+                  }}
+                  className={`w-full p-3 rounded-lg border ${
+                    errors.oldPassword
+                      ? "border-red-500"
+                      : "border-gray-300 dark:border-gray-700"
+                  } dark:bg-gray-800`}
+                />
+                {errors.oldPassword && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.oldPassword}
+                  </p>
+                )}
+              </div>
+
+              {/* New Password */}
+              <div>
+                <input
+                  type="password"
+                  placeholder="New Password"
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    setErrors((prev) => ({
+                      ...prev,
+                      newPassword: validateField("newPassword", e.target.value),
+                    }));
+                  }}
+                  className={`w-full p-3 rounded-lg border ${
+                    errors.newPassword
+                      ? "border-red-500"
+                      : "border-gray-300 dark:border-gray-700"
+                  } dark:bg-gray-800`}
+                />
+                {errors.newPassword && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.newPassword}
+                  </p>
+                )}
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <input
+                  type="password"
+                  placeholder="Confirm New Password"
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setErrors((prev) => ({
+                      ...prev,
+                      confirmPassword: validateField(
+                        "confirmPassword",
+                        e.target.value
+                      ),
+                    }));
+                  }}
+                  className={`w-full p-3 rounded-lg border ${
+                    errors.confirmPassword
+                      ? "border-red-500"
+                      : "border-gray-300 dark:border-gray-700"
+                  } dark:bg-gray-800`}
+                />
+                {errors.confirmPassword && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.confirmPassword}
+                  </p>
+                )}
+              </div>
+
+              <button
+                onClick={handleUpdatePassword}
+                className="w-full px-6 py-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition"
+              >
+                Update Password
+              </button>
             </div>
           </div>
 

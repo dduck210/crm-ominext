@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { toast } from "react-toastify";
 import axios from "axios";
 
 const USERS_API = "https://todo-backend-6c6i.onrender.com/users";
@@ -9,50 +8,101 @@ const Settings = () => {
   const [email, setEmail] = useState("");
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [twoFactor, setTwoFactor] = useState(false);
-  // const [theme, setTheme] = useState("light");
   const [loading, setLoading] = useState(false);
 
-  // state đổi mật khẩu
+  // Password states
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleSave = async () => {
-    if (!displayName || !email) {
-      toast.error("Please fill in all required fields");
-      return;
+  // Error + Success
+  const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // ✅ Validate 1 field cụ thể
+  const validateField = (field, value) => {
+    let message = "";
+
+    if (field === "displayName") {
+      if (!value.trim()) message = "Display Name is required";
     }
 
-    setLoading(true);
-    const payload = {
-      displayName,
-      email,
-      emailNotifications,
-      twoFactor,
-      // theme,
-    };
+    if (field === "email") {
+      if (!value.trim()) message = "Email is required";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        message = "Invalid email format";
+      }
+    }
 
+    setErrors((prev) => ({ ...prev, [field]: message }));
+    return message === "";
+  };
+
+  // ✅ Check email có tồn tại DB chưa
+  const handleEmailBlur = async () => {
+    if (errors.email) return; // nếu format đang sai thì khỏi check
     try {
-      console.log("Saving settings:", payload);
-      await new Promise((res) => setTimeout(res, 1000));
-      toast.success("Settings saved successfully");
+      const res = await axios.get(`${USERS_API}?email=${email}`);
+      if (res.data.length > 0) {
+        setErrors((prev) => ({ ...prev, email: "Email already in use" }));
+      } else {
+        setErrors((prev) => ({ ...prev, email: "" }));
+      }
     } catch (err) {
-      toast.error("Failed to save settings");
+      console.error("Error checking email:", err);
+    }
+  };
+
+  const handleSave = async () => {
+    setErrors({});
+    setSuccessMessage("");
+
+    // check lần cuối
+    if (
+      !validateField("displayName", displayName) ||
+      !validateField("email", email)
+    )
+      return;
+
+    if (errors.email) return; // nếu email duplicate thì không cho save
+
+    setLoading(true);
+    try {
+      const payload = {
+        displayName,
+        email,
+        emailNotifications,
+        twoFactor,
+      };
+
+      console.log("Saving settings:", payload);
+      await new Promise((res) => setTimeout(res, 1000)); // fake API call
+      setSuccessMessage("✅ Settings saved successfully");
+    } catch (err) {
+      setErrors({ global: "❌ Failed to save settings" });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdatePassword = async () => {
-    if (!oldPassword || !newPassword || !confirmPassword) {
-      toast.error("Please fill in all password fields");
-      return;
+  const validatePassword = () => {
+    const newErrors = {};
+    if (!oldPassword) newErrors.oldPassword = "Old password is required";
+    if (!newPassword) newErrors.newPassword = "New password is required";
+    if (!confirmPassword)
+      newErrors.confirmPassword = "Please confirm your password";
+    if (newPassword && confirmPassword && newPassword !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
     }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-    if (newPassword !== confirmPassword) {
-      toast.error("New password and confirm password do not match");
-      return;
-    }
+  const handleUpdatePassword = async () => {
+    setErrors({});
+    setSuccessMessage("");
+
+    if (!validatePassword()) return;
 
     try {
       const userId = localStorage.getItem("userId");
@@ -60,7 +110,7 @@ const Settings = () => {
       const user = res.data;
 
       if (user.password !== oldPassword) {
-        toast.error("Old password is incorrect");
+        setErrors({ oldPassword: "Old password is incorrect" });
         return;
       }
 
@@ -69,12 +119,12 @@ const Settings = () => {
         password: newPassword,
       });
 
-      toast.success("Password updated successfully");
+      setSuccessMessage("✅ Password updated successfully");
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      toast.error("Failed to update password");
+      setErrors({ global: "❌ Failed to update password" });
     }
   };
 
@@ -85,8 +135,8 @@ const Settings = () => {
       </h1>
 
       {/* Profile */}
-      <section className="p-6 bg-white dark:bg-gray-900 rounded-2xl shadow space-y-4">
-        <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200">
+      {/* <section className="p-6 bg-white dark:bg-gray-900 rounded-2xl shadow space-y-4"> */}
+      {/* <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200">
           Profile
         </h2>
         <div>
@@ -96,13 +146,21 @@ const Settings = () => {
           <input
             type="text"
             value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
+            onChange={(e) => {
+              setDisplayName(e.target.value);
+              validateField("displayName", e.target.value);
+            }}
             placeholder="Your name"
-            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700
-                       bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                       focus:ring-2 focus:ring-blue-500"
+            className={`w-full px-4 py-2 rounded-lg border 
+              ${errors.displayName ? "border-red-500" : "border-gray-300 dark:border-gray-700"}
+              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+              focus:ring-2 focus:ring-blue-500`}
           />
+          {errors.displayName && (
+            <p className="text-sm text-red-500 mt-1">{errors.displayName}</p>
+          )}
         </div>
+
         <div>
           <label className="block text-sm mb-1 text-gray-600 dark:text-gray-400">
             Email <span className="text-red-500">*</span>
@@ -110,18 +168,26 @@ const Settings = () => {
           <input
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              validateField("email", e.target.value);
+            }}
+            onBlur={handleEmailBlur}
             placeholder="you@example.com"
-            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700
-                       bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                       focus:ring-2 focus:ring-blue-500"
+            className={`w-full px-4 py-2 rounded-lg border 
+              ${errors.email ? "border-red-500" : "border-gray-300 dark:border-gray-700"}
+              bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+              focus:ring-2 focus:ring-blue-500`}
           />
-        </div>
-      </section>
+          {errors.email && (
+            <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+          )}
+        </div> */}
+      {/* </section> */}
 
       {/* Security */}
-      <section className="p-6 bg-white dark:bg-gray-900 rounded-2xl shadow space-y-4">
-        <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200">
+      {/* <section className="p-6 bg-white dark:bg-gray-900 rounded-2xl shadow space-y-4"> */}
+      {/* <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200">
           Security
         </h2>
         <div className="flex items-center justify-between">
@@ -138,10 +204,10 @@ const Settings = () => {
                 ${twoFactor ? "translate-x-6" : "translate-x-0"}`}
             />
           </button>
-        </div>
+        </div> */}
 
-        {/* Change Password */}
-        <div className="space-y-3">
+      {/* Change Password */}
+      {/* <div className="space-y-3">
           <div>
             <label className="block text-sm mb-1 text-gray-600 dark:text-gray-400">
               Old Password
@@ -151,11 +217,16 @@ const Settings = () => {
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
               placeholder="Enter old password"
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700
-                         bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                         focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-4 py-2 rounded-lg border 
+                ${errors.oldPassword ? "border-red-500" : "border-gray-300 dark:border-gray-700"}
+                bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                focus:ring-2 focus:ring-blue-500`}
             />
+            {errors.oldPassword && (
+              <p className="text-sm text-red-500 mt-1">{errors.oldPassword}</p>
+            )}
           </div>
+
           <div>
             <label className="block text-sm mb-1 text-gray-600 dark:text-gray-400">
               New Password
@@ -165,11 +236,16 @@ const Settings = () => {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Enter new password"
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700
-                         bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                         focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-4 py-2 rounded-lg border 
+                ${errors.newPassword ? "border-red-500" : "border-gray-300 dark:border-gray-700"}
+                bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                focus:ring-2 focus:ring-blue-500`}
             />
+            {errors.newPassword && (
+              <p className="text-sm text-red-500 mt-1">{errors.newPassword}</p>
+            )}
           </div>
+
           <div>
             <label className="block text-sm mb-1 text-gray-600 dark:text-gray-400">
               Confirm New Password
@@ -179,19 +255,26 @@ const Settings = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm new password"
-              className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700
-                         bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                         focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-4 py-2 rounded-lg border 
+                ${errors.confirmPassword ? "border-red-500" : "border-gray-300 dark:border-gray-700"}
+                bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                focus:ring-2 focus:ring-blue-500`}
             />
+            {errors.confirmPassword && (
+              <p className="text-sm text-red-500 mt-1">
+                {errors.confirmPassword}
+              </p>
+            )}
           </div>
+
           <button
             onClick={handleUpdatePassword}
             className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
           >
             Update Password
           </button>
-        </div>
-      </section>
+        </div> */}
+      {/* </section> */}
 
       {/* Preferences */}
       <section className="p-6 bg-white dark:bg-gray-900 rounded-2xl shadow space-y-4">
@@ -213,23 +296,20 @@ const Settings = () => {
             />
           </button>
         </div>
-        {/* <div>
-          <label className="block text-sm mb-1 text-gray-600 dark:text-gray-400">
-            Theme Mode
-          </label>
-          <select
-            value={theme}
-            onChange={(e) => setTheme(e.target.value)}
-            className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700
-                       bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                       focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="light">☀️ Light</option>
-            <option value="dark">🌙 Dark</option>
-            <option value="system">💻 System</option>
-          </select>
-        </div> */}
       </section>
+
+      {/* Global Error / Success */}
+      {(errors.global || successMessage) && (
+        <div
+          className={`p-3 rounded-lg text-sm font-medium ${
+            errors.global
+              ? "bg-red-100 text-red-700"
+              : "bg-green-100 text-green-700"
+          }`}
+        >
+          {errors.global || successMessage}
+        </div>
+      )}
 
       {/* Save */}
       <div className="flex justify-end">
