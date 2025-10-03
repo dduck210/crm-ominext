@@ -1,8 +1,9 @@
-// src/components/Header.js
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "react-toastify";
 import useDarkMode from "./hooks/useDarkMode";
+import Icon from "./Icon";
+import { Moon, Sun } from "lucide-react";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -113,7 +114,7 @@ const Header = () => {
                 <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 z-50">
                   {/* User info */}
                   <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-white flex items-center justify-center text-black font-bold">
                       {username?.charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -129,28 +130,36 @@ const Header = () => {
                   {/* Menu items */}
                   <div className="flex flex-col py-2">
                     <button
-                      className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                      className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                       onClick={() => navigate("/profile")}
                     >
-                      👤 Profile
+                      <Icon name="profile" className="w-4 h-4" />
+                      Profile
                     </button>
                     <button
-                      className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                      className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                       onClick={() => navigate("/settings")}
                     >
-                      ⚙️ Settings
+                      <Icon name="settings" className="w-4 h-4" />
+                      Settings
                     </button>
                     <button
-                      className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 text-left"
+                      className="px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                       onClick={() => setDarkMode((v) => !v)}
                     >
-                      {darkMode ? "🌙 Dark Mode" : "☀️ Light Mode"}
+                      {darkMode ? (
+                        <Moon className="w-4 h-4 text-gray-200" />
+                      ) : (
+                        <Sun className="w-4 h-4 text-yellow-500" />
+                      )}
+                      {darkMode ? "Dark Mode" : "Light Mode"}
                     </button>
                     <button
-                      className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-gray-700 text-left"
+                      className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-gray-700 flex items-center gap-2"
                       onClick={handleLogout}
                     >
-                      🚪 Logout
+                      <Icon name="logout" className="w-4 h-4" />
+                      Logout
                     </button>
                   </div>
                 </div>
@@ -163,7 +172,11 @@ const Header = () => {
                 className="px-2 py-1 rounded bg-white/20 hover:bg-white/30 dark:bg-gray-700 dark:hover:bg-gray-600 transition"
                 onClick={() => setDarkMode((v) => !v)}
               >
-                {darkMode ? "🌙" : "☀️"}
+                {darkMode ? (
+                  <Moon className="w-5 h-5 text-white" />
+                ) : (
+                  <Sun className="w-5 h-5 text-yellow-400" />
+                )}
               </button>
             </div>
           )}
