@@ -273,9 +273,9 @@ const Home = () => {
       (filter === "new" &&
         (todo.completed === null || todo.completed === undefined)) ||
       filter === "all";
-    const matchSearch = todo.todo
+    const matchSearch = (todo.todo || "")
       .toLowerCase()
-      .includes(search.trim().toLowerCase());
+      .includes((search || "").trim().toLowerCase());
     const userObj = users.find((u) => String(u.id) === String(todo.userId));
     const username = userObj ? userObj.username : "";
     const matchUsername =
@@ -313,9 +313,10 @@ const Home = () => {
       ...filteredTodos.map((todo) => {
         const userObj =
           users.find((u) => String(u.id) === String(todo.userId)) || {};
+        const safeTodo = todo.todo || ""; // fallback
         return [
           todo.id,
-          `"${todo.todo.replaceAll('"', '""')}"`,
+          `"${safeTodo.replaceAll('"', '""')}"`,
           userObj.username || "",
           todo.completed === true
             ? "Completed"

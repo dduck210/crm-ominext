@@ -19,7 +19,7 @@ const Settings = () => {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
 
-  // ✅ Validate 1 field cụ thể
+  // Validate 1 field cụ thể
   const validateField = (field, value) => {
     let message = "";
 
@@ -38,7 +38,7 @@ const Settings = () => {
     return message === "";
   };
 
-  // ✅ Check email có tồn tại DB chưa
+  // Check email có tồn tại DB chưa
   const handleEmailBlur = async () => {
     if (errors.email) return; // nếu format đang sai thì khỏi check
     try {
@@ -77,9 +77,9 @@ const Settings = () => {
 
       console.log("Saving settings:", payload);
       await new Promise((res) => setTimeout(res, 1000)); // fake API call
-      setSuccessMessage("✅ Settings saved successfully");
+      setSuccessMessage("Settings saved successfully");
     } catch (err) {
-      setErrors({ global: "❌ Failed to save settings" });
+      setErrors({ global: "Failed to save settings" });
     } finally {
       setLoading(false);
     }
@@ -119,12 +119,12 @@ const Settings = () => {
         password: newPassword,
       });
 
-      setSuccessMessage("✅ Password updated successfully");
+      setSuccessMessage("Password updated successfully");
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (err) {
-      setErrors({ global: "❌ Failed to update password" });
+      setErrors({ global: "Failed to update password" });
     }
   };
 
